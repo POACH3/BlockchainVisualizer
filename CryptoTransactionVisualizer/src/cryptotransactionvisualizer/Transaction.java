@@ -1,16 +1,31 @@
+/*
+ * Author: 		 T. Stratton
+ * Date started: 15 NOV 2023
+ * Last updated: 19 APR 2024
+ * 
+ * File Contents:
+ *  
+ * 
+ * Notes:
+ * 
+ * 
+ */
+
 package cryptotransactionvisualizer;
 
 import java.util.Date;
 
-public class Transaction {
+public class Transaction
+{
+	
 	private int blockNumber;
 	private Date timeStamp;
 	private String hash;
 	private int nonce;
 	private String blockHash;
 	private int transactionIndex;
-	private String fromWallet;
-	private String toWallet;
+	private String sender; // from
+	private String receiver; // to
 	private double value;
 	private int gas;
 	private int gasPrice;
@@ -22,16 +37,17 @@ public class Transaction {
 	private int gasUsed;
 	private int confirmations;
 	private String methodId;
-	private String functionName; // string correct datatype?
+	private String functionName;
 	
 	
-	public Transaction(int blockNumber, Date timeStamp, String hash, String fromWallet, String toWallet, double value, int isError, int txRecieved) {
+	public Transaction(int blockNumber, Date timeStamp, String hash, String sendingWallet, String receivingWallet, double value, int isError, int txRecieved)
+	{
 		
 		this.blockNumber = blockNumber;
 		this.timeStamp = timeStamp;
 		this.hash = hash;
-		this.fromWallet = fromWallet;
-		this.toWallet = toWallet;
+		this.sender = sendingWallet;
+		this.receiver = receivingWallet;
 		this.value = value;
 		
 		if (isError == 1)
@@ -46,9 +62,10 @@ public class Transaction {
 	} // end of constructor()
 	
 	public Transaction(int blockNumber, Date timeStamp, String hash, int nonce, String blockHash,
-			int transactionIndex, String fromWallet, String toWallet, double value, int gas, int gasPrice,
+			int transactionIndex, String sendingWallet, String receivingWallet, double value, int gas, int gasPrice,
 			int isError, int txRecieved, String input, String contractAddress, int cumulativeGas, 
-			int gasUsed, int confirmations, String methodId, String functionName) {
+			int gasUsed, int confirmations, String methodId, String functionName)
+	{
 		
 		this.blockNumber = blockNumber;
 		this.timeStamp = timeStamp;
@@ -56,8 +73,8 @@ public class Transaction {
 		this.nonce = nonce;
 		this.blockHash = blockHash;
 		this.transactionIndex = transactionIndex;
-		this.fromWallet = fromWallet;
-		this.toWallet = toWallet;
+		this.sender = sendingWallet;
+		this.receiver = receivingWallet;
 		this.value = value;
 		this.gas = gas;
 		this.gasPrice = gasPrice;
@@ -82,9 +99,10 @@ public class Transaction {
 	} // end of constructor()
 	
 	public Transaction(int blockNumber, String blockHash, Date timeStamp, String hash, int nonce,
-			int transactionIndex, String fromWallet, String toWallet, double value, int gas, int gasPrice,
+			int transactionIndex, String sendingWallet, String receivingWallet, double value, int gas, int gasPrice,
 			String input, String methodId, String functionName, String contractAddress, 
-			int cumulativeGas, int txRecieved, int gasUsed, int confirmations, int isError) {
+			int cumulativeGas, int txRecieved, int gasUsed, int confirmations, int isError)
+	{
 		
 		this.blockNumber = blockNumber;
 		this.timeStamp = timeStamp;
@@ -92,8 +110,8 @@ public class Transaction {
 		this.nonce = nonce;
 		this.blockHash = blockHash;
 		this.transactionIndex = transactionIndex;
-		this.fromWallet = fromWallet;
-		this.toWallet = toWallet;
+		this.sender = sendingWallet;
+		this.receiver = receivingWallet;
 		this.value = value;
 		this.gas = gas;
 		this.gasPrice = gasPrice;
@@ -117,91 +135,51 @@ public class Transaction {
 		this.functionName = functionName;
 	} // end of constructor()
 
-	public int getBlockNumber() {
-		return blockNumber;
-	}
+	public int getBlockNumber() { return blockNumber; }
 
-	public Date getTimeStamp() {
-		return timeStamp;
-	}
+	public Date getTimeStamp() { return timeStamp; }
 
-	public String getHash() {
-		return hash;
-	}
+	public String getHash() { return hash; }
 
-	public int getNonce() {
-		return nonce;
-	}
+	public int getNonce() { return nonce; }
 
-	public String getBlockHash() {
-		return blockHash;
-	}
+	public String getBlockHash() { return blockHash; }
 
-	public int getTransactionIndex() {
-		return transactionIndex;
-	}
+	public int getTransactionIndex() { return transactionIndex; }
 
-	public String getFromWallet() {
-		return fromWallet;
-	}
+	public String getSender() { return sender; }
 
-	public String getToWallet() {
-		return toWallet;
-	}
+	public String getReceiver() { return receiver; }
 
-	public double getValue() {
-		return value;
-	}
+	public double getValue() { return value; }
 
-	public int getGas() {
-		return gas;
-	}
+	public int getGas() { return gas; }
 
-	public int getGasPrice() {
-		return gasPrice;
-	}
+	public int getGasPrice() { return gasPrice; }
 
-	public boolean isError() {
-		return isError;
-	}
+	public boolean isError() { return isError; }
 
-	public boolean isTxRecieved() {
-		return txRecieved;
-	}
+	public boolean isTxRecieved() { return txRecieved; }
 
-	public String getInput() {
-		return input;
-	}
+	public String getInput() { return input; }
 
-	public String getContractAddress() {
-		return contractAddress;
-	}
+	public String getContractAddress() { return contractAddress; }
 
-	public int getCumulativeGas() {
-		return cumulativeGas;
-	}
+	public int getCumulativeGas() { return cumulativeGas; }
 
-	public int getGasUsed() {
-		return gasUsed;
-	}
+	public int getGasUsed() { return gasUsed; }
 
-	public int getConfirmations() {
-		return confirmations;
-	}
+	public int getConfirmations() { return confirmations; }
 
-	public String getMethodId() {
-		return methodId;
-	}
+	public String getMethodId() { return methodId; }
 
-	public String getFunctionName() {
-		return functionName;
-	}
+	public String getFunctionName() { return functionName; }
 
 	@Override
 	public String toString() {
 		return String.format(" %d  ", blockNumber) + 
 				String.format("  %1$tm-%1$td-%1$ty %1$tH:%1$tM ", timeStamp) + 
-				String.format("   %s     %s     %s    %.8f BNB", hash, fromWallet, toWallet, value);
+				String.format("   %s     %s     %s    %.8f BNB", hash, sender, receiver, value);
 		//return String.format(" %d     %d    %s     %s     %s    %.8f BNB", blockNumber, timeStamp, hash, fromWallet, toWallet, value);
 	}
 	
