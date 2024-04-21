@@ -7,12 +7,11 @@
  *  
  * 
  * Notes:
- * 	Fix so API key isn't a field.
- * 	Fix wei to BNB conversion.
+ * 	Maybe change weiToBNB() parameter to double?
  * 
  */
 
-package cryptotransactionvisualizer;
+package blockchainvisualizer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,54 +25,107 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
 
+/**
+ * This class is a Binance Smart Chain cryptocurrency wallet.
+ * It provides a means to query wallet and transaction information pulled
+ * from the BscScan.com through its API.
+ * An API key must be provided.
+ */
 public class Wallet {
-	
-	//String API_KEY; // FIXME
 	
 	String address; // wallet address
 	double balance; // wallet balance in BNB
-	
-	final static long CRYPTO_COIN_UNIT = 1_000_000_000_000_000_000L; // Wei = 10^-18
-	final static BigInteger CRYPTO_COIN_UNIT2 = new BigInteger("1000000000000000000"); // Wei = 10^-18
-	final static double CRYPTO_COIN_UNIT3 = 1_000_000; // Wei = 10^-18
-	
 	
 	ArrayList<Transaction> transactions = new ArrayList<>(); // all transactions of the searched wallet
 	ArrayList<String> senders = new ArrayList<>(); 		     // wallets searched wallet has received from
 	ArrayList<String> receivers = new ArrayList<>();		 // wallets searched wallet has sent to
 	
+	HashMap<String, Integer> numTransactions = new HashMap<>(); // number of transactions between wallets
+	HashMap<String, Double> netValueTransactions = new HashMap<>(); // net value of transactions between wallets (negative is more money transferred out than into this wallet)
+	//HashMap<String, WalletInfo> walletInfo;
 	
-	public Wallet(String address) // FIXME
+	
+	public Wallet(String address)
 	{
-		//this.API_KEY = api_key; // FIXME
-		
 		this.address = address.toLowerCase();
-		getBalance();
-		getTransactions();
+		//getBalance(); // set balance later to reduce API calls
+		try {
+			getTransactions();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		getTransactedWallets();
+		//transactionCount();
+		transactionValue();
+	}
+	
+	
+	/**
+	 * Gets the value of transactions between this wallet
+	 * and all other wallets with which it has transacted.
+	 */
+	private void transactionValue()
+	{
+		for (String sender : senders)
+		{
+			if (!netValueTransactions.containsKey(sender))
+			{
+				netValueTransactions.put(sender, 0.0);
+			}
+		}
+		for (String receiver : receivers)
+		{
+			if (!netValueTransactions.containsKey(receiver))
+			{
+				netValueTransactions.put(receiver, 0.0);
+			}
+		}
+		
+		
+		for (Transaction transaction : transactions)
+		{
+			String sender = transaction.getSender();
+			String receiver = transaction.getReceiver();
+			
+			if (sender == this.address)
+			{
+				double currentValue = netValueTransactions.get(sender);
+				netValueTransactions.put(sender, currentValue - transaction.getValue());
+			}
+			else // receiver must be this wallet
+			{
+				double currentValue = netValueTransactions.get(sender);
+				netValueTransactions.put(receiver, currentValue + transaction.getValue());
+			}
+		}
 	}
 	
 	
 	/**
 	 * Gets the number of transactions between this wallet
-	 * and the provided wallet address.
-	 * 
-	 * @param otherWallet
-	 * @return
+	 * and each of the other wallets with which it has transacted.
 	 */
-	public int transactionCount(String otherWallet)
-	{
-		int count = 0; // number of transactions
+	private void transactionCount()
+	{		
+		System.out.println("numTransactions: " + numTransactions.size());
 		
 		for (Transaction transaction : transactions)
 		{
-			if (transaction.getSender() == otherWallet || transaction.getReceiver() == otherWallet)
+			String sender = transaction.getSender();
+			String receiver = transaction.getReceiver();
+			
+			if (sender != this.address)
 			{
-				count++;
+				int currentNumber = numTransactions.get(sender);
+				numTransactions.put(sender, currentNumber++);
+			}
+			else // receiver must be the other wallet
+			{
+				int currentNumber = numTransactions.get(receiver);
+				numTransactions.put(receiver, currentNumber++);
 			}
 		}
-		
-		return count;
 	}
 	
 	
@@ -99,6 +151,23 @@ public class Wallet {
 			
 			//System.out.println("From: " + sender + "   To: " + receiver);
 		}
+		
+		// prep numTransactions hashmap with address, 0
+		for (String sender : senders)
+		{
+			if (!numTransactions.containsKey(sender))
+			{
+				numTransactions.put(sender, 0);
+			}
+		}
+		for (String receiver : receivers)
+		{
+			if (!numTransactions.containsKey(receiver))
+			{
+				numTransactions.put(receiver, 0);
+			}
+		}
+		
 		
 //		System.out.println("\n" + this.address + " received transactions from these wallets:\n");
 //		for (String s : senders)
@@ -152,8 +221,9 @@ public class Wallet {
 	 * 
 	 * @param walletAddress
 	 * @return
+	 * @throws Exception 
 	 */
-	public void getTransactions()
+	public void getTransactions() throws Exception
 	{
 		String enumAction = WalletActions.TXLIST.name().toLowerCase();
 		String urlString = "https://api.bscscan.com/api?module=account" + 
@@ -165,10 +235,9 @@ public class Wallet {
 				"&offset=" + 10 + 				// number of transactions per page (max 10000)
 				"&sort=asc" + 					// ascending order
 				"&apikey=" + BlockchainApp.API_KEY;
-		
-		//20356945
 
-		String line = "";
+
+		String jsonData = "";
 
 		try
 		{
@@ -193,7 +262,7 @@ public class Wallet {
 //							input.nextLine();
 //						}
 
-				line = reader.readLine();
+				jsonData = reader.readLine();
 
 			}
 
@@ -211,11 +280,17 @@ public class Wallet {
 		}
 		
 		// raw output from BSC Scan
-		//System.out.println(line);
+		System.out.println(jsonData);
+		
+		// call error
+		if (jsonData.equals("{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"Max rate limit reached\"}"))
+		{
+			throw new Exception("Max rate limit reached.");
+		}
 		
 		// parse
-		line = line.substring(1, line.length()-1);
-		String[] messages = line.split(",", 3); // unnecessary?
+		jsonData = jsonData.substring(1, jsonData.length()-1);
+		String[] messages = jsonData.split(",", 3); // unnecessary?
 		//System.out.println("\n");
 		
 		String result = messages[2].substring(10, messages[2].length()-1);
@@ -255,78 +330,29 @@ public class Wallet {
 			{
 				String[] txKvp = singleTxData[j].split(":");
 				//System.out.println("Length of txKvp[1]: " + txKvp[1].length());
-				if (txKvp.length > 1) {
+				if (txKvp.length > 1)
+				{
 					txData.put(txKvp[0].substring(1,txKvp[0].length()-1), (txKvp[1].substring(1,txKvp[1].length()-1)).toLowerCase());
 				}
 				else
 				{
 					txData.put(txKvp[0].substring(1,txKvp[0].length()-1), "");
 				}
-
-				//txData.put(txKvp[0], txKvp[1]);
-
 			}
-			
-//			Transaction tx = new Transaction(Integer.parseInt(txData.get("blockNumber")),
-//					unixTimeToDate(Integer.parseInt(txData.get("timeStamp"))),
-//					txData.get("hash"),
-//					txData.get("from"),
-//					txData.get("to"),
-//					convertWeiToBNB(txData.get("value")),
-//					Integer.parseInt(txData.get("isError")),
-//					Integer.parseInt(txData.get("txreceipt_status")));
 			
 			Transaction tx = new Transaction(Integer.parseInt(txData.get("blockNumber")),
 					unixTimeToDate(Integer.parseInt(txData.get("timeStamp"))),
 					txData.get("hash"),
 					txData.get("from"),
 					txData.get("to"),
-					Double.parseDouble(txData.get("value")),
+					convertWeiToBNB(txData.get("value")),
 					Integer.parseInt(txData.get("isError")),
 					Integer.parseInt(txData.get("txreceipt_status")));
 			
 			transactions.add(tx);
 		}
-		
-		
-		
-//		String[] singleTX_1D = new String[20];
-//		String[][] singleTX_2D = new String[20][2];
-//		
-//		for (int i = 0; i < allTxData.length; i++)
-//		{
-//			
-//			singleTX_1D = allTxData[i].split(",");
-//			
-//			for (int j = 0; j < singleTX_1D.length; j++)
-//				singleTX_2D[j] = singleTX_1D[j].split(":");
-//			
-//			for (int k = 0; k < singleTX_2D.length; k++)
-//			{
-//				if (singleTX_2D[k][1].length() > 2)
-//					singleTX_2D[k][1] = singleTX_2D[k][1].substring(1,singleTX_2D[k][1].length()-1);
-//				
-//				System.out.println(singleTX_2D[k][0] + " : " + singleTX_2D[k][1]);
-//			}
-//			
-//			//System.out.println("\n");
-//			
-//			Transaction tx = new Transaction(Integer.parseInt(singleTX_2D[0][1]),
-//					unixTimeToDate(Integer.parseInt(singleTX_2D[1][1])),
-//					singleTX_2D[2][1],
-//					singleTX_2D[6][1],
-//					singleTX_2D[7][1],
-//					convertWeiToBNB(singleTX_2D[8][1]), // double
-//					Integer.parseInt(singleTX_2D[11][1]),
-//					Integer.parseInt(singleTX_2D[12][1]));
-			
-//			walletTransactions.add(tx);
-			//System.out.println("\n");
-//		}
-			
-		//return null;
+
 	}
-	
 	
 	
 	/**
@@ -334,8 +360,9 @@ public class Wallet {
 	 * 
 	 * @param walletAddress
 	 * @return
+	 * @throws Exception 
 	 */
-	public void getBalance()
+	public void getBalance() throws Exception
 	{
 		String enumAction = WalletActions.BALANCE.name().toLowerCase();
 		String urlString = "https://api.bscscan.com/api?module=account" + 
@@ -343,7 +370,7 @@ public class Wallet {
 							"&address=" + this.address + 
 							"&apikey=" + BlockchainApp.API_KEY;
 
-		String line = "";
+		String jsonData = "";
 
 		try
 		{
@@ -355,7 +382,7 @@ public class Wallet {
 					// BufferedWriter writer = new BufferedWriter(new FileWriter("info.txt"));
 					Scanner input = new Scanner(System.in))
 			{
-				line = reader.readLine();
+				jsonData = reader.readLine();
 			}
 		}
 		catch (MalformedURLException e)
@@ -371,56 +398,52 @@ public class Wallet {
 		}
 		
 		// unparsed json balance result
-		//System.out.println(line);
+		System.out.println(jsonData);
 		//{"status":"1","message":"OK","result":"6999188248887296596"}
 		
-		// parsing what is returned
-		String[] messages = line.split(",");
-		double balance = 0;
-		String balanceStr = "";
-
-		try
+		// call error
+		if (jsonData.equals("{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"Max rate limit reached\"}"))
 		{
-
-			String weiBalance = line.substring(39,line.length() - 2);
-			//balance = convertWeiToBNB(weiBalance);
-			balance = Double.parseDouble(weiBalance);
-
-		}
-		catch (NumberFormatException | ArrayIndexOutOfBoundsException e)
-		{
-			System.err.println("Error: " + line);
+			throw new Exception("Max rate limit reached.");
 		}
 
-//		System.out.println(balance2.divide(CRYPTO_COIN_UNIT2) + " BNB");
-//		System.out.println(balance1 / CRYPTO_COIN_UNIT3 + " BNB");
-//		System.out.println(String.valueOf((balance3 / CRYPTO_COIN_UNIT) * Math.pow(10,12)) + " BNB");
-		
-		//return balance;
+		String weiBalance = jsonData.substring(39,jsonData.length() - 2);
+		double balance = convertWeiToBNB(weiBalance);
+
 		this.balance = balance;
 	} // end of getBalance()
 	
 	
+	
 	/**
-	 * Converts Wei to BNB.
+	 * Converts Wei to BNB by inserting a decimal 18 decimal
+	 * places to the left (10^-18).
+	 * Zeros will be added if necessary to move the decimal.
 	 * 
 	 * @param wei
 	 * @return
 	 */
 	public static double convertWeiToBNB (String wei)
-	{
-		double bnb;
-		StringBuilder sb = new StringBuilder("0000000000");
+	{	
+		if (wei.equals("0")) { return Double.parseDouble(wei); }
 		
+		if (wei.length() < 18)
+		{
+			StringBuilder zeros = new StringBuilder();
+			
+			for (int i = 0; i < 18 - wei.length(); i++)
+			{
+				zeros = zeros.append("0");
+			}
+			
+			wei = (zeros.toString()).concat(wei);
+		}
 		
-		//balanceStr = new StringBuilder(weiBalance).insert((int) (weiBalance.length() - Math.log10(CRYPTO_COIN_UNIT)), ".").toString(); // move decimal to convert to BNB
-
-
-		sb = sb.append(wei);
-		sb = sb.insert((int) (sb.length() - Math.log10(CRYPTO_COIN_UNIT)), ".");
-		bnb = Double.parseDouble(sb.toString());
+		StringBuilder bnb = new StringBuilder(wei);
 		
-		return bnb;
+		bnb.insert(wei.length() - 18, '.');
+		
+		return Double.parseDouble(bnb.toString());
 	} // end of convertWei()
 	
 	

@@ -11,10 +11,15 @@
  * 
  */
 
-package cryptotransactionvisualizer;
+package blockchainvisualizer;
 
 import java.util.Date;
 
+
+/**
+ * This class represents a cryptocurrency transaction by
+ * holding all associated information.
+ */
 public class Transaction
 {
 	
@@ -184,6 +189,27 @@ public class Transaction
 	}
 	
 	
+	//order of the query results changes?
+		//transactionData2[0] = transactionData[0].substring(15,transactionData[0].length()-1);    //blocknumber
+		//transactionData2[1] = transactionData[1].substring(13,transactionData[1].length()-1);    //blockhash
+		//transactionData2[2] = transactionData[2].substring(13,transactionData[2].length()-1);    //timestamp
+		//transactionData2[3] = transactionData[3].substring(8,transactionData[3].length()-1);     //hash
+		//transactionData2[4] = transactionData[4].substring(9,transactionData[4].length()-1);     //nonce
+		//transactionData2[5] = transactionData[5].substring(20,transactionData[5].length()-1);    //transactionindex
+		//transactionData2[6] = transactionData[6].substring(8,transactionData[6].length()-1);     //from
+		//transactionData2[7] = transactionData[7].substring(6,transactionData[7].length()-1);     //to
+		//transactionData2[8] = transactionData[8].substring(9,transactionData[8].length()-1); 	   //value
+		//transactionData2[9] = transactionData[9].substring(7,transactionData[9].length()-1); 	   //gas
+		//transactionData2[10] = transactionData[10].substring(12,transactionData[10].length()-1); //gasprice
+		//transactionData2[11] = transactionData[11].substring(9,transactionData[11].length()-1);  //input
+		//transactionData2[12] = transactionData[12].substring(12,transactionData[12].length()-1); //methodID
+		//transactionData2[13] = transactionData[13].substring(10,transactionData[13].length()-1); //functionName
+		//transactionData2[14] = transactionData[14].substring(18,transactionData[14].length()-1); //contractAdd
+		//transactionData2[15] = transactionData[15].substring(21,transactionData[15].length()-1); //cumGas
+		//transactionData2[16] = transactionData[16].substring(20,transactionData[16].length()-1); //txReceipt
+		//transactionData2[17] = transactionData[17].substring(11,transactionData[17].length()-1); //gasUsed
+		//transactionData2[18] = transactionData[18].substring(17,transactionData[18].length()-1); //confirmations
+		//transactionData2[19] = transactionData[19].substring(11,transactionData[19].length()-1); //isError
 	
 	
 }

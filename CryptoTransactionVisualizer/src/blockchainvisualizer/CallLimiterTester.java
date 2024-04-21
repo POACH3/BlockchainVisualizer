@@ -1,4 +1,4 @@
-package cryptotransactionvisualizer;
+package blockchainvisualizer;
 
 public class CallLimiterTester {
 
@@ -12,8 +12,7 @@ public class CallLimiterTester {
 		
 		for (int i = 0; i < 100; i++)
 		{
-			callLimiter.requestToken();
-			System.out.println(i);
+			System.out.println("token: " + callLimiter.requestToken() + " result: " + i);
 		}
 
 	}

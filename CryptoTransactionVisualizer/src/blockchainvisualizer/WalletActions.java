@@ -1,4 +1,4 @@
-package cryptotransactionvisualizer;
+package blockchainvisualizer;
 
 public enum WalletActions {
 	BALANCE,
