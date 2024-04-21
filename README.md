@@ -1,4 +1,4 @@
-Author:        T. Stratton  
+Author:        &nbsp;&nbsp;&nbsp;&nbsp;T. Stratton <br />
 Date started:  11-NOV-2023  
 GitHub ID:     POACH3  
 Repo:          https://github.com/POACH3/BlockchainVisualizer
