@@ -1,7 +1,7 @@
 /*
  * Author: 		 T. Stratton
  * Date started: 15 NOV 2023
- * Last updated: 19 APR 2024
+ * Last updated: 04 JUL 2024
  * 
  * File Contents:
  *  
@@ -31,7 +31,8 @@ public class Transaction
 	private int transactionIndex;
 	private String sender; // from
 	private String receiver; // to
-	private double value;
+	private double valueWei;
+	private double valueBNB;
 	private int gas;
 	private int gasPrice;
 	private boolean isError;
@@ -45,7 +46,7 @@ public class Transaction
 	private String functionName;
 	
 	
-	public Transaction(int blockNumber, Date timeStamp, String hash, String sendingWallet, String receivingWallet, double value, int isError, int txRecieved)
+	public Transaction(int blockNumber, Date timeStamp, String hash, String sendingWallet, String receivingWallet, double valueWei, int isError, int txRecieved)
 	{
 		
 		this.blockNumber = blockNumber;
@@ -53,7 +54,8 @@ public class Transaction
 		this.hash = hash;
 		this.sender = sendingWallet;
 		this.receiver = receivingWallet;
-		this.value = value;
+		this.valueWei = valueWei;
+		this.valueBNB = valueWei * Math.pow(10, -18);
 		
 		if (isError == 1)
 			this.isError = true;
@@ -67,7 +69,7 @@ public class Transaction
 	} // end of constructor()
 	
 	public Transaction(int blockNumber, Date timeStamp, String hash, int nonce, String blockHash,
-			int transactionIndex, String sendingWallet, String receivingWallet, double value, int gas, int gasPrice,
+			int transactionIndex, String sendingWallet, String receivingWallet, double valueWei, int gas, int gasPrice,
 			int isError, int txRecieved, String input, String contractAddress, int cumulativeGas, 
 			int gasUsed, int confirmations, String methodId, String functionName)
 	{
@@ -80,7 +82,8 @@ public class Transaction
 		this.transactionIndex = transactionIndex;
 		this.sender = sendingWallet;
 		this.receiver = receivingWallet;
-		this.value = value;
+		this.valueWei = valueWei;
+		this.valueBNB = valueWei * Math.pow(10, -18);
 		this.gas = gas;
 		this.gasPrice = gasPrice;
 		
@@ -104,7 +107,7 @@ public class Transaction
 	} // end of constructor()
 	
 	public Transaction(int blockNumber, String blockHash, Date timeStamp, String hash, int nonce,
-			int transactionIndex, String sendingWallet, String receivingWallet, double value, int gas, int gasPrice,
+			int transactionIndex, String sendingWallet, String receivingWallet, double valueWei, int gas, int gasPrice,
 			String input, String methodId, String functionName, String contractAddress, 
 			int cumulativeGas, int txRecieved, int gasUsed, int confirmations, int isError)
 	{
@@ -117,7 +120,8 @@ public class Transaction
 		this.transactionIndex = transactionIndex;
 		this.sender = sendingWallet;
 		this.receiver = receivingWallet;
-		this.value = value;
+		this.valueWei = valueWei;
+		this.valueBNB = valueWei * Math.pow(10, -18);
 		this.gas = gas;
 		this.gasPrice = gasPrice;
 		
@@ -156,7 +160,9 @@ public class Transaction
 
 	public String getReceiver() { return receiver; }
 
-	public double getValue() { return value; }
+	public double getValueWei() { return valueWei; }
+	
+	public double getValueBNB() { return valueBNB; }
 
 	public int getGas() { return gas; }
 
@@ -184,7 +190,7 @@ public class Transaction
 	public String toString() {
 		return String.format(" %d  ", blockNumber) + 
 				String.format("  %1$tm-%1$td-%1$ty %1$tH:%1$tM ", timeStamp) + 
-				String.format("   %s     %s     %s    %.8f BNB", hash, sender, receiver, value);
+				String.format("   %s     %s     %s    %.8f BNB", hash, sender, receiver, valueBNB);
 		//return String.format(" %d     %d    %s     %s     %s    %.8f BNB", blockNumber, timeStamp, hash, fromWallet, toWallet, value);
 	}
 	

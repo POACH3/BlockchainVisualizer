@@ -1,13 +1,13 @@
 /*
  * Author: 		 T. Stratton
  * Date started: 18 APR 2024
- * Last updated: 21 APR 2024
+ * Last updated: 04 JUL 2024
  * 
  * File Contents:
  *  
  * 
  * Notes:
- * 	Maybe change weiToBNB() parameter to double?
+ * 
  * 
  */
 
@@ -33,31 +33,39 @@ import java.util.Scanner;
  */
 public class Wallet {
 	
-	String address; // wallet address
-	double balance; // wallet balance in BNB
+	String address; 													 // wallet address
+	double balance; 													 // wallet balance in BNB
 	
-	ArrayList<Transaction> transactions = new ArrayList<>(); // all transactions of the searched wallet
-	ArrayList<String> senders = new ArrayList<>(); 		     // wallets searched wallet has received from
-	ArrayList<String> receivers = new ArrayList<>();		 // wallets searched wallet has sent to
+	ArrayList<Transaction> transactions = new ArrayList<>(); 			 // all transactions of the searched wallet
+	ArrayList<String> firstDegreeWallets = new ArrayList<>();			 // all wallets directly associated to this wallet (transactions)
+	ArrayList<String> senders = new ArrayList<>(); 		     			 // wallets searched wallet has received from
+	ArrayList<String> receivers = new ArrayList<>();		 			 // wallets searched wallet has sent to
 	
-	HashMap<String, Integer> numTransactions = new HashMap<>(); // number of transactions between wallets
-	HashMap<String, Double> netValueTransactions = new HashMap<>(); // net value of transactions between wallets (negative is more money transferred out than into this wallet)
-	//HashMap<String, WalletInfo> walletInfo;
+	HashMap<String, Integer> transactionSentCount = new HashMap<>(); 	 // number of transactions sent by wallet to each other wallet
+	HashMap<String, Integer> transactionReceivedCount = new HashMap<>(); // number of transactions received by wallet from each other wallet
+	
+	HashMap<String, Double> transactionsSentValue = new HashMap<>(); 	 // value of transactions sent by wallet to each other wallet
+	HashMap<String, Double> transactionsReceivedValue = new HashMap<>(); // value of transactions received by wallet from each other wallet
 	
 	
 	public Wallet(String address)
 	{
 		this.address = address.toLowerCase();
-		//getBalance(); // set balance later to reduce API calls
-		try {
+		//getBalance(); 												 // set balance later to reduce API calls (batch balance calls)
+		
+		try
+		{
 			getTransactions();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		}
+		catch (Exception e)
+		{
+			System.out.println("Error in getting the transactions from BSCScan.\n");
 			e.printStackTrace();
 		}
-		getTransactedWallets();
-		//transactionCount();
-		transactionValue();
+		
+		setFirstDegreeWallets();
+		setTransactionCount();
+		setTransactionValue();
 	}
 	
 	
@@ -65,81 +73,104 @@ public class Wallet {
 	 * Gets the value of transactions between this wallet
 	 * and all other wallets with which it has transacted.
 	 */
-	private void transactionValue()
-	{
-		for (String sender : senders)
-		{
-			if (!netValueTransactions.containsKey(sender))
-			{
-				netValueTransactions.put(sender, 0.0);
-			}
-		}
-		for (String receiver : receivers)
-		{
-			if (!netValueTransactions.containsKey(receiver))
-			{
-				netValueTransactions.put(receiver, 0.0);
-			}
-		}
-		
-		
+	private void setTransactionValue()
+	{		
+		// initialize value to 0
 		for (Transaction transaction : transactions)
 		{
 			String sender = transaction.getSender();
 			String receiver = transaction.getReceiver();
 			
-			if (sender == this.address)
+			if (sender.equals(this.address) && !transactionsSentValue.containsKey(receiver))
+			{				
+				transactionsSentValue.put(receiver, 0.0);
+			}
+			
+			if (receiver.equals(this.address) && !transactionsReceivedValue.containsKey(sender))
 			{
-				double currentValue = netValueTransactions.get(sender);
-				netValueTransactions.put(sender, currentValue - transaction.getValue());
+				transactionsReceivedValue.put(sender, 0.0);
+			}
+		}
+
+		// update to actual value
+		for (Transaction transaction : transactions)
+		{
+			String sender = transaction.getSender();
+			String receiver = transaction.getReceiver();
+			
+			if (sender.equals(this.address))
+			{
+				double currentValue = transactionsSentValue.get(receiver);
+				transactionsSentValue.put(receiver, currentValue + transaction.getValueBNB());
 			}
 			else // receiver must be this wallet
 			{
-				double currentValue = netValueTransactions.get(sender);
-				netValueTransactions.put(receiver, currentValue + transaction.getValue());
+				double currentValue = transactionsReceivedValue.get(sender);
+				transactionsReceivedValue.put(sender, currentValue + transaction.getValueBNB());
 			}
-		}
-	}
+		}		
+	} // end of setTransactionValue()
 	
 	
 	/**
 	 * Gets the number of transactions between this wallet
 	 * and each of the other wallets with which it has transacted.
 	 */
-	private void transactionCount()
-	{		
-		System.out.println("numTransactions: " + numTransactions.size());
+	private void setTransactionCount()
+	{			
+		// initialize number to 0
+		for (String sender : senders)
+		{
+			if (!sender.equals(this.address) && !transactionReceivedCount.containsKey(sender))
+			{
+				transactionReceivedCount.put(sender, 0);
+			}
+		}
+		for (String receiver : receivers)
+		{
+			if (!receiver.equals(this.address) && !transactionSentCount.containsKey(receiver))
+			{
+				transactionSentCount.put(receiver, 0);
+			}
+		}
 		
+		// update to actual number
 		for (Transaction transaction : transactions)
 		{
 			String sender = transaction.getSender();
 			String receiver = transaction.getReceiver();
 			
-			if (sender != this.address)
+			//System.out.println(transaction);
+			
+			if (receiver.equals(this.address))
 			{
-				int currentNumber = numTransactions.get(sender);
-				numTransactions.put(sender, currentNumber++);
+				int currentNumber = transactionReceivedCount.get(sender);
+				currentNumber++;
+				transactionReceivedCount.put(sender, currentNumber);
 			}
 			else // receiver must be the other wallet
 			{
-				int currentNumber = numTransactions.get(receiver);
-				numTransactions.put(receiver, currentNumber++);
+				int currentNumber = transactionSentCount.get(receiver);
+				currentNumber++;
+				transactionSentCount.put(receiver, currentNumber);
 			}
 		}
-	}
+	} // end of setTransactionCount()
 	
 	
 	/**
-	 * 
-	 * 
+	 * Populates three lists:
+	 * 	- all wallet addresses that have sent to or received from this wallet
+	 *  - any wallet address that are senders to this wallet
+	 * 	- any wallet addresses that are receivers from this wallet
 	 */
-	public void getTransactedWallets()
+	private void setFirstDegreeWallets()
 	{
-		for (Transaction t : transactions)
+		for (Transaction transaction : transactions)
 		{
 			
-			String sender = t.getSender();;
-			String receiver = t.getReceiver();;
+			String sender = transaction.getSender();
+			String receiver = transaction.getReceiver();
 			
 			if (!sender.equals(this.address) && !senders.contains(sender)) {
 				this.senders.add(sender);
@@ -149,71 +180,17 @@ public class Wallet {
 				this.receivers.add(receiver);
 			}
 			
-			//System.out.println("From: " + sender + "   To: " + receiver);
-		}
-		
-		// prep numTransactions hashmap with address, 0
-		for (String sender : senders)
-		{
-			if (!numTransactions.containsKey(sender))
+			if (!firstDegreeWallets.contains(receiver))
 			{
-				numTransactions.put(sender, 0);
+				firstDegreeWallets.add(receiver);
+			}
+			
+			if (!firstDegreeWallets.contains(sender))
+			{
+				firstDegreeWallets.add(sender);
 			}
 		}
-		for (String receiver : receivers)
-		{
-			if (!numTransactions.containsKey(receiver))
-			{
-				numTransactions.put(receiver, 0);
-			}
-		}
-		
-		
-//		System.out.println("\n" + this.address + " received transactions from these wallets:\n");
-//		for (String s : senders)
-//		{
-//			System.out.println(s);
-//		}
-//		
-//		System.out.println("\n" + this.address + " sent transactions to these wallets:\n");
-//		for (String s : receivers)
-//		{
-//			System.out.println(s);
-//		}
-		
-
-	}
-	
-//	public ArrayList<String> getWalletsReceivedFrom(String address)
-//	{
-//		ArrayList<String> walletsReceivedFrom = new ArrayList<String>();
-//		
-//		for (Transaction t : transactions)
-//		{
-//			if (t.getSender() != address)
-//			{
-//				walletsReceivedFrom.add(t.getSender());
-//			}
-//		}
-//		
-//		return walletsReceivedFrom;
-//	}
-//	
-//	
-//	public ArrayList<String> getWalletsSentTo(String address)
-//	{
-//		ArrayList<String> walletsSentTo = new ArrayList<String>();
-//
-//		for (Transaction t : transactions)
-//		{
-//			if (t.getReceiver() != address)
-//			{
-//				walletsSentTo.add(t.getReceiver());
-//			}
-//		}
-//		
-//		return walletsSentTo;
-//	}
+	} // end of setFirstDegreeWallets()
 	
 	
 	/**
@@ -232,7 +209,7 @@ public class Wallet {
 				"&startblock=" + 0 + 
 				"&endblock=" + 99999999 + 
 				"&page=" + 1 +					// optional pagination
-				"&offset=" + 10 + 				// number of transactions per page (max 10000)
+				"&offset=" + 1000 + 				// number of transactions per page (max 10000)
 				"&sort=asc" + 					// ascending order
 				"&apikey=" + BlockchainApp.API_KEY;
 
@@ -280,7 +257,7 @@ public class Wallet {
 		}
 		
 		// raw output from BSC Scan
-		System.out.println(jsonData);
+		//System.out.println(jsonData);
 		
 		// call error
 		if (jsonData.equals("{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"Max rate limit reached\"}"))
@@ -345,7 +322,7 @@ public class Wallet {
 					txData.get("hash"),
 					txData.get("from"),
 					txData.get("to"),
-					convertWeiToBNB(txData.get("value")),
+					Double.parseDouble(txData.get("value")),
 					Integer.parseInt(txData.get("isError")),
 					Integer.parseInt(txData.get("txreceipt_status")));
 			
@@ -357,6 +334,10 @@ public class Wallet {
 	
 	/**
 	 * Gets the current balance in BNB of the provided wallet.
+	 * 
+	 * Note: It is best to not use this method, if the balances of multiple
+	 * wallets are needed. To save API calls, the balances of up to 20 addresses
+	 * at a time may be bundled in one call.
 	 * 
 	 * @param walletAddress
 	 * @return
@@ -398,7 +379,7 @@ public class Wallet {
 		}
 		
 		// unparsed json balance result
-		System.out.println(jsonData);
+		//System.out.println(jsonData);
 		//{"status":"1","message":"OK","result":"6999188248887296596"}
 		
 		// call error
@@ -407,48 +388,15 @@ public class Wallet {
 			throw new Exception("Max rate limit reached.");
 		}
 
-		String weiBalance = jsonData.substring(39,jsonData.length() - 2);
-		double balance = convertWeiToBNB(weiBalance);
+		double weiBalance = Double.parseDouble(jsonData.substring(39,jsonData.length() - 2));
+		double bnbBalance = weiBalance * Math.pow(10, -18);
 
-		this.balance = balance;
+		this.balance = bnbBalance;
 	} // end of getBalance()
 	
 	
-	
 	/**
-	 * Converts Wei to BNB by inserting a decimal 18 decimal
-	 * places to the left (10^-18).
-	 * Zeros will be added if necessary to move the decimal.
-	 * 
-	 * @param wei
-	 * @return
-	 */
-	public static double convertWeiToBNB (String wei)
-	{	
-		if (wei.equals("0")) { return Double.parseDouble(wei); }
-		
-		if (wei.length() < 18)
-		{
-			StringBuilder zeros = new StringBuilder();
-			
-			for (int i = 0; i < 18 - wei.length(); i++)
-			{
-				zeros = zeros.append("0");
-			}
-			
-			wei = (zeros.toString()).concat(wei);
-		}
-		
-		StringBuilder bnb = new StringBuilder(wei);
-		
-		bnb.insert(wei.length() - 18, '.');
-		
-		return Double.parseDouble(bnb.toString());
-	} // end of convertWei()
-	
-	
-	/**
-	 * Converts unix time to a standard date.
+	 * Converts unix time to a UTC time and date.
 	 * 
 	 * @param unixTime
 	 * @return

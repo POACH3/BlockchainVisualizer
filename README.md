@@ -3,6 +3,7 @@ Date started:  11-NOV-2023
 GitHub ID:     POACH3  
 Repo:          https://github.com/POACH3/BlockchainVisualizer
 
+---
 
 # Blockchain Visualizer
 This visualizer is a more intuitive way to visualize crypto transaction activity on the Binance Smart Chain (BSC) blockchain.

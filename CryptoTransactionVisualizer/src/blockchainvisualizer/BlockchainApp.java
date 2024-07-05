@@ -1,7 +1,7 @@
 /*
  * Author: 		 T. Stratton
  * Date started: 15 NOV 2023
- * Last updated: 21 APR 2024
+ * Last updated: 04 JUL 2024
  * 
  * File Contents:
  * 	main
@@ -78,43 +78,87 @@ public class BlockchainApp
 //			System.out.println(kvp.getKey().toString() + ": " + kvp.getValue().toString());
 //		}
 
-
+		System.out.println("Searching wallet: " + walletAddress.toLowerCase()); //testing
+		System.out.println(); //testing
 		
 		searchedAddress = walletAddress.toLowerCase();
 		searchedWallet = new Wallet(searchedAddress);
 		
-		System.out.println("Searching wallet: " + searchedAddress);
-		System.out.println();
+//		System.out.println("Searching wallet: " + searchedAddress);
+//		System.out.println();
 		
 		// list of transacted wallets
 		ArrayList<Transaction> searchedWalletTransactions = searchedWallet.transactions;
 		
+		System.out.println(searchedWalletTransactions.size() + " transactions: ");
+		System.out.println();
+		
+		for (Transaction t : searchedWalletTransactions)
+		{
+			System.out.println(t);
+		}
+		System.out.println();
+		
+		System.out.println("Number of transactions sent by this wallet");
+		for (HashMap.Entry<String, Integer> kvp : searchedWallet.transactionSentCount.entrySet())
+		{
+			System.out.println(kvp.getKey() + ", " + searchedWallet.transactionSentCount.get(kvp.getKey()));
+		}
+		System.out.println();
+		
+		System.out.println("Number of transactions received by this wallet");
+		for (HashMap.Entry<String, Integer> kvp : searchedWallet.transactionReceivedCount.entrySet())
+		{
+			System.out.println(kvp.getKey() + ", " + searchedWallet.transactionReceivedCount.get(kvp.getKey()));
+		}
+		System.out.println();
+		
+		System.out.println("Total value of transactions sent by this wallet");
+		for (HashMap.Entry<String, Double> kvp : searchedWallet.transactionsSentValue.entrySet())
+		{
+			System.out.printf("%s, %f BNB\n", kvp.getKey(), searchedWallet.transactionsSentValue.get(kvp.getKey()));
+		}
+		System.out.println();
+		
+		System.out.println("Total value of transactions received by this wallet");
+		for (HashMap.Entry<String, Double> kvp : searchedWallet.transactionsReceivedValue.entrySet())
+		{
+			System.out.printf("%s, %f BNB\n", kvp.getKey(), searchedWallet.transactionsReceivedValue.get(kvp.getKey()));
+		}
+		System.out.println();
 		
 		// create 1st degree wallets
-		for (String address : searchedWallet.senders)
-		{
-			firstDegreeWallets.put(address, new Wallet(address));
-		}
-		for (String address : searchedWallet.receivers)
-		{
-			firstDegreeWallets.put(address, new Wallet(address));
-		}
+//		for (String address : searchedWallet.senders)
+//		{
+//			firstDegreeWallets.put(address, new Wallet(address));
+//		}
+//		for (String address : searchedWallet.receivers)
+//		{
+//			firstDegreeWallets.put(address, new Wallet(address));
+//		}
 		
-		System.out.println("Senders: " + searchedWallet.senders.size());
+		System.out.println();
+		System.out.println("Senders: " + searchedWallet.senders.size() + " (wallets sent to the searched wallet)");
 		for (String sender : searchedWallet.senders)
 		{
 			System.out.println(sender);
 		}
 		System.out.println();
 		
-		System.out.println("Receivers: " + searchedWallet.receivers.size());
+		System.out.println("Receivers: " + searchedWallet.receivers.size() + " (wallets received from the searched wallet)");
 		for (String receiver : searchedWallet.receivers)
 		{
 			System.out.println(receiver);
 		}
 		System.out.println();
 		
-		System.out.println("First degree wallets: " + firstDegreeWallets.size());
+		System.out.println("First degree wallets: " + searchedWallet.firstDegreeWallets.size());
+		for (String address : searchedWallet.firstDegreeWallets)
+		{
+			System.out.println(address);
+		}
+		
+		
 		for (HashMap.Entry<String, Wallet> kvp : firstDegreeWallets.entrySet())
 		{
 			System.out.println(kvp.getKey());
@@ -141,8 +185,8 @@ public class BlockchainApp
 			
 			for (HashMap.Entry<String, Double> kvp : allWalletBalances.entrySet())
 			{
-				System.out.println(kvp.getKey());
-				System.out.println(kvp.getValue());
+				//System.out.println(kvp.getKey());
+				//System.out.println(kvp.getValue());
 				
 				if (!kvp.getKey().equals(searchedAddress))
 				{
@@ -161,11 +205,11 @@ public class BlockchainApp
 			
 	
 			// number of transactions between each wallet
-			HashMap<String, Integer> numTransactions = searchedWallet.numTransactions;
+			//HashMap<String, Integer> numTransactions = searchedWallet.transactionCount;
 			
 			
 			// net value of all transactions between wallets
-			HashMap<String, Double> netValueTransactions = searchedWallet.netValueTransactions;
+			//HashMap<String, Double> netValueTransactions = searchedWallet.transactionsNetValue;
 			
 			
 			
@@ -330,7 +374,7 @@ public class BlockchainApp
 		}
 		
 		// unparsed json
-		System.out.println(jsonData);
+		//System.out.println(jsonData);
 		//{"status":"1","message":"OK","result":[{"account":"0xf3d7d404d3b8a5ab5a45d7573e44a6cff37d3c89","balance":"6999188248887296596"},{"account":"0xacd208b1fe8d117169d8c3eba5aba8c3effece84","balance":"2517136666739920017"},{"account":"0xaaa649a830af14f38c135e15bb5b08a5e7f2b4ec","balance":"39773881844604313239"}]}
 		
 		// call error
@@ -369,7 +413,7 @@ public class BlockchainApp
 		}
 		
 		return balances;
-	}
+	} // end of getBalances()
 	
 	
 	/**
