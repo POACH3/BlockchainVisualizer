@@ -209,7 +209,7 @@ public class Wallet {
 				"&startblock=" + 0 + 
 				"&endblock=" + 99999999 + 
 				"&page=" + 1 +					// optional pagination
-				"&offset=" + 1000 + 				// number of transactions per page (max 10000)
+				"&offset=" + 50 + 				// number of transactions per page (max 10000)
 				"&sort=asc" + 					// ascending order
 				"&apikey=" + BlockchainApp.API_KEY;
 
