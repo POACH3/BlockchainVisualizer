@@ -1,7 +1,7 @@
 /*
  * Author: 		 T. Stratton
  * Date started: 15 NOV 2023
- * Last updated: 10 JUL 2024
+ * Last updated: 21 AUG 2024
  * 
  * File Contents:
  * 	main
@@ -10,6 +10,9 @@
  * 
  * Notes:
  * 	parse json to see if call results in error
+ * 
+ * graph with nodes of type wallet and edges of type transaction
+ * graph with nodes of type string (wallet address) and edges of type double (total transfer value)
  * 
  */
 
@@ -39,57 +42,58 @@ public class BlockchainApp
 	
 	public static void main(String[] args)
 	{
-//		try { API_KEY = getSecret("resources/secrets.properties", "api.key1"); }
-//		catch (Exception ex) { System.out.println("OH NOES!   " + ex.getMessage()); }
+		try { API_KEY = getSecret("resources/secrets.properties", "api.key1"); }
+		catch (Exception ex) { System.out.println("OH NOES!   " + ex.getMessage()); }
+		
+		// manage API calls
+		final int RATE_LIMIT = 4; // can be 5
+		callLimiter = new CallLimiter(RATE_LIMIT);
+		Thread limiterThread = new Thread(callLimiter);
+		limiterThread.start();
+		
+		//{"status":"0","message":"NOTOK","result":"Max rate limit reached"}
+		
+		
+		String searchedAddress;						 				   // wallet address of searched wallet
+		Wallet searchedWallet;										   // searched wallet
+		HashMap<String, Wallet> firstDegreeWallets = new HashMap<>();  // wallets with which the searched wallet has transacted
+		HashMap<String, Double> walletBalances = new HashMap<>();      // balance of all wallets
+		
+		String walletAddress = "0xf3d7d404D3B8A5ab5a45D7573e44a6CFf37D3c89";
+		String walletAddress2 = "0xaCD208B1fe8D117169d8C3ebA5aBa8C3effece84";
+		String walletAddress3 = "0xaAA649A830AF14F38c135e15bB5B08a5e7F2B4eC";
+		
+		
+//		ArrayList<Wallet> wallets = new ArrayList<>();
 //		
-//		// manage API calls
-//		final int RATE_LIMIT = 4; // can be 5
-//		callLimiter = new CallLimiter(RATE_LIMIT);
-//		Thread limiterThread = new Thread(callLimiter);
-//		limiterThread.start();
+//		Wallet wallet1 = new Wallet(walletAddress);
+//		Wallet wallet2 = new Wallet(walletAddress2);
+//		Wallet wallet3 = new Wallet(walletAddress3);
 //		
-//		//{"status":"0","message":"NOTOK","result":"Max rate limit reached"}
+//		wallets.add(wallet1);
+//		wallets.add(wallet2);
+//		wallets.add(wallet3);
 //		
+//		HashMap<String,Double> balances = getBalances(wallets);
 //		
-//		String searchedAddress;						 				   // wallet address of searched wallet
-//		Wallet searchedWallet;										   // searched wallet
-//		HashMap<String, Wallet> firstDegreeWallets = new HashMap<>();  // wallets with which the searched wallet has transacted
-//		HashMap<String, Double> walletBalances = new HashMap<>();      // balance of all wallets
-//		
-//		String walletAddress = "0xf3d7d404D3B8A5ab5a45D7573e44a6CFf37D3c89";
-//		String walletAddress2 = "0xaCD208B1fe8D117169d8C3ebA5aBa8C3effece84";
-//		String walletAddress3 = "0xaAA649A830AF14F38c135e15bB5B08a5e7F2B4eC";
-//		
-//		
-////		ArrayList<Wallet> wallets = new ArrayList<>();
-////		
-////		Wallet wallet1 = new Wallet(walletAddress);
-////		Wallet wallet2 = new Wallet(walletAddress2);
-////		Wallet wallet3 = new Wallet(walletAddress3);
-////		
-////		wallets.add(wallet1);
-////		wallets.add(wallet2);
-////		wallets.add(wallet3);
-////		
-////		HashMap<String,Double> balances = getBalances(wallets);
-////		
-////		for (HashMap.Entry<String,Double> kvp : balances.entrySet())
-////		{
-////			System.out.println(kvp.getKey().toString() + ": " + kvp.getValue().toString());
-////		}
-//
-//		System.out.println("Searching wallet: " + walletAddress.toLowerCase()); //testing
-//		System.out.println(); //testing
-//		
-//		searchedAddress = walletAddress.toLowerCase();
-//		searchedWallet = new Wallet(searchedAddress);
-//		
-////		System.out.println("Searching wallet: " + searchedAddress);
-////		System.out.println();
-//		
-//		// list of transacted wallets
-//		ArrayList<Transaction> searchedWalletTransactions = searchedWallet.transactions;
-//		
+//		for (HashMap.Entry<String,Double> kvp : balances.entrySet())
+//		{
+//			System.out.println(kvp.getKey().toString() + ": " + kvp.getValue().toString());
+//		}
+
+		System.out.println("Searching wallet: " + walletAddress.toLowerCase()); //testing
+		System.out.println(); //testing
+		
+		searchedAddress = walletAddress.toLowerCase();
+		searchedWallet = new Wallet(searchedAddress);
+		
+//		System.out.println("Searching wallet: " + searchedAddress);
+//		System.out.println();
+		
+		// list of transacted wallets
+		ArrayList<Transaction> searchedWalletTransactions = searchedWallet.transactions;
+		
+		// info about searched wallet transactions
 //		System.out.println(searchedWalletTransactions.size() + " transactions: ");
 //		System.out.println();
 //		
@@ -126,17 +130,17 @@ public class BlockchainApp
 //			System.out.printf("%s, %f BNB\n", kvp.getKey(), searchedWallet.transactionsReceivedValue.get(kvp.getKey()));
 //		}
 //		System.out.println();
-//		
-//		// create 1st degree wallets
-////		for (String address : searchedWallet.senders)
-////		{
-////			firstDegreeWallets.put(address, new Wallet(address));
-////		}
-////		for (String address : searchedWallet.receivers)
-////		{
-////			firstDegreeWallets.put(address, new Wallet(address));
-////		}
-//		
+		
+		// create 1st degree wallets
+//		for (String address : searchedWallet.senders)
+//		{
+//			firstDegreeWallets.put(address, new Wallet(address));
+//		}
+//		for (String address : searchedWallet.receivers)
+//		{
+//			firstDegreeWallets.put(address, new Wallet(address));
+//		}
+		
 //		System.out.println();
 //		System.out.println("Senders: " + searchedWallet.senders.size() + " (wallets sent to the searched wallet)");
 //		for (String sender : searchedWallet.senders)
@@ -175,8 +179,8 @@ public class BlockchainApp
 //		}
 //		
 //		HashMap<String, Double> allWalletBalances;
-//		try
-//		{
+		try
+		{
 //			allWalletBalances = getBalances(allWallets);
 //
 //			searchedWallet.balance = allWalletBalances.get(searchedWallet.address);
@@ -203,14 +207,6 @@ public class BlockchainApp
 //				walletBalances.put(kvp.getKey(), kvp.getValue().balance);
 //			}
 //			
-//	
-//			// number of transactions between each wallet
-//			//HashMap<String, Integer> numTransactions = searchedWallet.transactionCount;
-//			
-//			
-//			// net value of all transactions between wallets
-//			//HashMap<String, Double> netValueTransactions = searchedWallet.transactionsNetValue;
-//			
 //			
 //			
 //			System.out.print("Current wallet balances: \n");
@@ -219,69 +215,93 @@ public class BlockchainApp
 //			{
 //				System.out.printf("%s: %.10f BNB\n", kvp.getKey(), kvp.getValue());
 //			}
-//			
-//		}
-//		catch (Exception e)
-//		{
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+			
+			// number of transactions between each wallet
+			//HashMap<String, Integer> numTransactions = searchedWallet.transactionCount;
 		
-//		String[][] array = new String[2][6];
+		
+			// net value of all transactions between wallets
+			//HashMap<String, Double> netValueTransactions = searchedWallet.transactionsNetValue;
+			
+			//graph with nodes of type wallet and edges of type transaction
+			
+			//graph with nodes of type string (wallet address) and edges of type double (total transfer value)
+			
+			// number of transactions from searched wallet
+			int numTransactions = searchedWallet.transactions.size();
+			String[][] transferAccounts = new String[numTransactions][2];
+			Double[] transferAmounts = new Double[numTransactions];
+			
+			// go through each transaction and add to a list
+			//for (Transaction transaction : searchedWallet.transactions)
+			for (int i = 0; i < searchedWallet.transactions.size(); i++)
+			{
+				transferAccounts[i][0] = searchedWallet.transactions.get(i).getSender();
+				transferAccounts[i][1] = searchedWallet.transactions.get(i).getReceiver();
+				transferAmounts[i] = searchedWallet.transactions.get(i).getValueWei(); // should be a transaction or tx ID
+			}
+			
+			// create hashmap of all transfers associated with wallet
+			HashMap<String[], Double> transfers = new HashMap<>();
+			for (int i = 0; i < searchedWallet.transactions.size(); i++)
+			{
+				transfers.put(transferAccounts[i], transferAmounts[i]);
+			}
+			
+			EdgeWeightedSymbolDigraph graph = new EdgeWeightedSymbolDigraph(transfers);
+			System.out.println(graph);
+			
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//test of graph functionality
+//		String[][] transferAccounts = new String[7][2];
+//		Double[] transferAmounts = new Double[7];
 //		
-//		array[0][0] = "zero";
-//		array[0][1] = "one";
+//		transferAccounts[0][0] = "zero";
+//		transferAccounts[0][1] = "one";
+//		transferAmounts[0] = 10.0;
 //		
-//		array[1][0] = "zero";
-//		array[1][1] = "two";
+//		transferAccounts[1][0] = "zero";
+//		transferAccounts[1][1] = "two";
+//		transferAmounts[1] = 20.0;
 //		
-//		array[2][0] = "zero";
-//		array[2][1] = "three";
+//		transferAccounts[2][0] = "zero";
+//		transferAccounts[2][1] = "three";
+//		transferAmounts[2] = 30.0;
 //		
-//		array[3][0] = "zero";
-//		array[3][1] = "four";
+//		transferAccounts[3][0] = "zero";
+//		transferAccounts[3][1] = "four";
+//		transferAmounts[3] = 40.0;
 //		
-//		array[4][0] = "zero";
-//		array[4][1] = "five";
+//		transferAccounts[4][0] = "zero";
+//		transferAccounts[4][1] = "five";
+//		transferAmounts[4] = 50.0;
 //		
-//		array[5][0] = "zero";
-//		array[5][1] = "six";
+//		transferAccounts[5][0] = "zero";
+//		transferAccounts[5][1] = "six";
+//		transferAmounts[5] = 60.0;
+//		
+//		transferAccounts[6][0] = "zero";
+//		transferAccounts[6][1] = "six";
+//		transferAmounts[6] = 99.0;
+//		
+//		
+//		HashMap<String[], Double> transfers = new HashMap<>();
+//		transfers.put(transferAccounts[0], transferAmounts[0]);
+//		transfers.put(transferAccounts[1], transferAmounts[1]);
+//		transfers.put(transferAccounts[2], transferAmounts[2]);
+//		transfers.put(transferAccounts[3], transferAmounts[3]);
+//		transfers.put(transferAccounts[4], transferAmounts[4]);
+//		transfers.put(transferAccounts[5], transferAmounts[5]);
+//		transfers.put(transferAccounts[6], transferAmounts[6]);		
 		
-		
-		String[] array1 = new String[2];
-		array1[0] = "zero";
-		array1[1] = "one";
-		
-		String[] array2 = new String[2];
-		array2[0] = "zero";
-		array2[1] = "two";
-		
-		String[] array3 = new String[2];
-		array3[0] = "zero";
-		array3[1] = "three";
-		
-		String[] array4 = new String[2];
-		array4[0] = "zero";
-		array4[1] = "four";
-		
-		String[] array5 = new String[2];
-		array5[0] = "zero";
-		array5[1] = "five";
-		
-		String[] array6 = new String[2];
-		array6[0] = "zero";
-		array6[1] = "six";
-		
-		HashMap<String[], Double> map = new HashMap<>();
-		map.put(array1, 10.0);
-		map.put(array2, 20.0);
-		map.put(array3, 30.0);
-		map.put(array4, 40.0);
-		map.put(array5, 50.0);
-		map.put(array6, 60.0);
-		
-		EdgeWeightedSymbolDigraph graph = new EdgeWeightedSymbolDigraph(map);
-		System.out.println(graph);
+//		EdgeWeightedSymbolDigraph graph = new EdgeWeightedSymbolDigraph(transfers);
+//		System.out.println(graph);
 		
 //		Scanner scnr = new Scanner(System.in);
 //		boolean cont = true; // user wants to continue program
