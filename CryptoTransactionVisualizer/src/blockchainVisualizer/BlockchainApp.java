@@ -223,32 +223,10 @@ public class BlockchainApp
 			// net value of all transactions between wallets
 			//HashMap<String, Double> netValueTransactions = searchedWallet.transactionsNetValue;
 			
-			//graph with nodes of type wallet and edges of type transaction
 			
-			//graph with nodes of type string (wallet address) and edges of type double (total transfer value)
 			
-			// number of transactions from searched wallet
-			int numTransactions = searchedWallet.transactions.size();
-			String[][] transferAccounts = new String[numTransactions][2];
-			Double[] transferAmounts = new Double[numTransactions];
 			
-			// go through each transaction and add to a list
-			//for (Transaction transaction : searchedWallet.transactions)
-			for (int i = 0; i < searchedWallet.transactions.size(); i++)
-			{
-				transferAccounts[i][0] = searchedWallet.transactions.get(i).getSender();
-				transferAccounts[i][1] = searchedWallet.transactions.get(i).getReceiver();
-				transferAmounts[i] = searchedWallet.transactions.get(i).getValueWei(); // should be a transaction or tx ID
-			}
-			
-			// create hashmap of all transfers associated with wallet
-			HashMap<String[], Double> transfers = new HashMap<>();
-			for (int i = 0; i < searchedWallet.transactions.size(); i++)
-			{
-				transfers.put(transferAccounts[i], transferAmounts[i]);
-			}
-			
-			EdgeWeightedSymbolDigraph graph = new EdgeWeightedSymbolDigraph(transfers);
+			BlockchainGraph graph = new BlockchainGraph(searchedWalletTransactions);
 			System.out.println(graph);
 			
 		}
@@ -257,51 +235,7 @@ public class BlockchainApp
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		//test of graph functionality
-//		String[][] transferAccounts = new String[7][2];
-//		Double[] transferAmounts = new Double[7];
-//		
-//		transferAccounts[0][0] = "zero";
-//		transferAccounts[0][1] = "one";
-//		transferAmounts[0] = 10.0;
-//		
-//		transferAccounts[1][0] = "zero";
-//		transferAccounts[1][1] = "two";
-//		transferAmounts[1] = 20.0;
-//		
-//		transferAccounts[2][0] = "zero";
-//		transferAccounts[2][1] = "three";
-//		transferAmounts[2] = 30.0;
-//		
-//		transferAccounts[3][0] = "zero";
-//		transferAccounts[3][1] = "four";
-//		transferAmounts[3] = 40.0;
-//		
-//		transferAccounts[4][0] = "zero";
-//		transferAccounts[4][1] = "five";
-//		transferAmounts[4] = 50.0;
-//		
-//		transferAccounts[5][0] = "zero";
-//		transferAccounts[5][1] = "six";
-//		transferAmounts[5] = 60.0;
-//		
-//		transferAccounts[6][0] = "zero";
-//		transferAccounts[6][1] = "six";
-//		transferAmounts[6] = 99.0;
-//		
-//		
-//		HashMap<String[], Double> transfers = new HashMap<>();
-//		transfers.put(transferAccounts[0], transferAmounts[0]);
-//		transfers.put(transferAccounts[1], transferAmounts[1]);
-//		transfers.put(transferAccounts[2], transferAmounts[2]);
-//		transfers.put(transferAccounts[3], transferAmounts[3]);
-//		transfers.put(transferAccounts[4], transferAmounts[4]);
-//		transfers.put(transferAccounts[5], transferAmounts[5]);
-//		transfers.put(transferAccounts[6], transferAmounts[6]);		
-		
-//		EdgeWeightedSymbolDigraph graph = new EdgeWeightedSymbolDigraph(transfers);
-//		System.out.println(graph);
+
 		
 //		Scanner scnr = new Scanner(System.in);
 //		boolean cont = true; // user wants to continue program
