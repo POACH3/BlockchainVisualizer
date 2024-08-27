@@ -1,7 +1,7 @@
 /*
  * Author: 		 T. Stratton
  * Date started: 15 NOV 2023
- * Last updated: 21 AUG 2024
+ * Last updated: 26 AUG 2024
  * 
  * File Contents:
  * 	main
@@ -11,8 +11,7 @@
  * Notes:
  * 	parse json to see if call results in error
  * 
- * graph with nodes of type wallet and edges of type transaction
- * graph with nodes of type string (wallet address) and edges of type double (total transfer value)
+ *  graph with nodes of type wallet and edges of type transaction
  * 
  */
 
@@ -85,13 +84,13 @@ public class BlockchainApp
 		System.out.println(); //testing
 		
 		searchedAddress = walletAddress.toLowerCase();
-		searchedWallet = new Wallet(searchedAddress);
+	//	searchedWallet = new Wallet(searchedAddress);
 		
 //		System.out.println("Searching wallet: " + searchedAddress);
 //		System.out.println();
 		
 		// list of transacted wallets
-		ArrayList<Transaction> searchedWalletTransactions = searchedWallet.transactions;
+	//	ArrayList<Transaction> searchedWalletTransactions = searchedWallet.transactions;
 		
 		// info about searched wallet transactions
 //		System.out.println(searchedWalletTransactions.size() + " transactions: ");
@@ -226,8 +225,9 @@ public class BlockchainApp
 			
 			
 			
-			BlockchainGraph graph = new BlockchainGraph(searchedWalletTransactions);
-			System.out.println(graph);
+//			BlockchainGraph graph = new BlockchainGraph(searchedWalletTransactions);
+//			System.out.println(graph);
+			
 			
 		}
 		catch (Exception e)
@@ -236,6 +236,9 @@ public class BlockchainApp
 			e.printStackTrace();
 		}
 
+		
+		
+		GUI gui = new GUI();
 		
 //		Scanner scnr = new Scanner(System.in);
 //		boolean cont = true; // user wants to continue program
